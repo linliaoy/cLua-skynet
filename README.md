@@ -3,7 +3,7 @@
 [<img src="https://img.shields.io/github/languages/top/esrrhs/cLua">](https://github.com/esrrhs/cLua)
 [<img src="https://img.shields.io/github/actions/workflow/status/esrrhs/cLua/go.yml?branch=master">](https://github.com/esrrhs/cLua/actions)
 
-lua的代码覆盖率工具
+lua的代码覆盖率工具,应用于skynet
 
 # 特性
 * 数据采集用C++编写，性能更高，对宿主进程影响更小
@@ -13,7 +13,7 @@ lua的代码覆盖率工具
 * 配合lua_helper搭建覆盖率统计服务
 
 # 编译
-* 安装lua 5.3
+* 引用skynet/3rd/lua/下面的*.h,简单点直接把*.h拷贝到当前目录
 * 编译libclua.so
 ```
 # cmake .
@@ -33,51 +33,21 @@ lua的代码覆盖率工具
 ```
 
 # 使用
-* 直接嵌入lua脚本中使用，lua文件里使用如下
+ 拷贝libclua.so到 skynet 动态库目录下
+ 拷贝covclua.lua到 skynet/lualib目录下
 ```
--- 加载libclua.so
-local cl = require "libclua"
--- 开始记录执行过程，生成结果文件
--- 第一个参数为结果文件的文件名
--- 第二个参数为定时生成结果文件的间隔（秒），0表示关闭
-cl.start("test.cov", 5)
-
--- 执行某些事情
-do_something()
-
--- 结束记录
-cl.stop()
+   拷贝前可以修改报告生成的目录和文件
+   cl.sethook(co,"/tmp/test/test-service.cov"..covfilenum, 5)
 ```
-* 或者使用[hookso](https://github.com/esrrhs/hookso)注入到进程中（假设进程id为PID），手动开启
+ skynet/lubalib/skynet.lua文件最上面添加require(covclua.lua)
 ```
-a) 首先获取进程中的Lua_State指针，比如进程调用了lua_settop(L)函数，那么就取第一个参数
-# ./hookso arg $PID liblua.so lua_settop 1 
-123456
-
-b) 加载libclua.so
-# ./hookso dlopen $PID ./libclua.so
-
-c) 执行libclua.so的start_cov手动开启，等价于start_cov(L, "./test.cov", 5)
-# ./hookso call $PID libclua.so start_cov i=123456 s="./test.cov" i=5
-
-c) 执行libclua.so的stop_cov手动关闭，等价于stop_cov(L)
-# ./hookso call $PID libclua.so stop_cov i=123456
-```
-* 执行完上述两种方法的任一一种，用clua解析test.cov查看结果。clua更多参数参考-h
-```
-# ./clua -i test.cov
+服务启动后就会生成报告
 ```
 
 # 示例
-* 运行test.lua
-```
-# lua5.3 ./test.lua
-```
-* 查看目录下，已有test.cov文件
-```
-# ll test.cov
-```
-* 查看结果，每行前面的数字表示执行的次数，空表示没被执行，方便定位潜在bug。最后几行显示了总体覆盖率，以及每个函数的覆盖率
+* 运行skynet
+* 拷贝clua到skynet同级目录
+* 查看结果，到skynet同级目录执行clua,每行前面的数字表示执行的次数，空表示没被执行，方便定位潜在bug。最后几行显示了总体覆盖率，以及每个函数的覆盖率
 ```
 # ./clua -i test.cov     
 total points = 27, files = 1

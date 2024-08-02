@@ -183,11 +183,27 @@ static int lstop(lua_State *L) {
     return 0;
 }
 
+static int db_sethook (lua_State *L) {
+  int arg;
+  lua_State *L1 = getthread(L, &arg);
+
+  const char *file = lua_tostring(L, 2);
+  int autosave = (int) lua_tointeger(L, 3);
+  gfile = file;
+
+  gautosave = autosave;
+  gcount = 0;
+  glasttime = 0;
+  lua_sethook(L1, hook_handler, LUA_MASKLINE, 0);
+  return 0;
+}
+
 extern "C" int luaopen_libclua(lua_State *L) {
     luaL_checkversion(L);
     luaL_Reg l[] = {
             {"start", lstart},
             {"stop",  lstop},
+            {"sethook",db_sethook},
             {NULL,    NULL},
     };
     luaL_newlib(L, l);

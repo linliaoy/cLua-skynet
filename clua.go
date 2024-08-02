@@ -654,8 +654,8 @@ func parseLua(filecontent []string) ([]ast.Stmt, bool) {
 		}
 		source += str
 	}
-
-	block, err := ast.Parse(string(source), 1)
+        sourceNew:=strings.ReplaceAll(string(source),"\\Z","\\\\Z")
+	block, err := ast.Parse(sourceNew, 1)
 	if err != nil {
 		fmt.Printf("Parse File Fail %v\n", err)
 		return nil, false
